@@ -1,0 +1,135 @@
+﻿AppType=StandardJava
+Build1=Default,b4j.jrdc2.server
+Build2=MSSQL,b4j.jrdc2.server,MSSQL
+Build3=MySQL,b4j.jrdc2.server,MySQL
+Build4=Firebird,b4j.jrdc2.server,Firebird
+Build5=Postgresql,b4j.jrdc2.server,Postgresql
+Build6=DBF,b4j.jrdc2.server,DBF
+File1=config.properties
+FileGroup1=Default Group
+Group=Default Group
+Library1=javaobject
+Library2=jcore
+Library3=jserver
+Library4=jshell
+Library5=jsql
+Library6=jrandomaccessfile
+Module1=HomeHandler
+Module2=RDCConnector
+Module3=RDCHandler
+NumberOfFiles=1
+NumberOfLibraries=6
+NumberOfModules=3
+Version=10
+@EndOfDesignText@
+' Name: 			jRDC2 Server Template
+' Version: 			2.00 (based on jRDC2 version 2.23)
+' Author:			Aeric Poon
+' Description: 		Non-UI application (console / server application)
+' Files folder: 	file:///C:/B4X/Development/jrdc2-server-template-b4j/JRDC%20Server%20%282.00%29/Files
+' Config file: 		ide://run?file=%WINDIR%\SysWOW64\explorer.exe&Args=%PROJECT%\Files\config.properties
+
+#Region  Project Attributes
+	#CommandLineArgs: dev
+	#MergeLibraries: True
+#End Region
+
+' Choose build configuration
+#If MSSQL
+#AdditionalJar: jtds-1.3.1
+#Else If MySQL
+#AdditionalJar: mysql-connector-java-8.0.30
+#Else If Firebird
+#AdditionalJar: jaybird-5.0.0.java11
+#Else If Postgresql
+#AdditionalJar: postgresql-42.6.0
+#Else If DBF
+#AdditionalJar: javadbf-1.13.2
+#AdditionalJar: dbschema-dbf-jdbc1.0
+#AdditionalJar: h2-1.4.200
+#Else
+#AdditionalJar: sqlite-jdbc-3.7.2
+#End If
+
+Sub Process_Globals
+	Public const VERSION As Double = 2.0
+	Public srvr As Server
+	Public rdcConnector1 As RDCConnector
+	Public config As Map
+	Private SslPort As Int
+	Private KeyStoreDir As String
+	Private KeyStoreFile As String
+	Private KeyStorePassword As String
+	Type DBCommand (Name As String, Parameters() As Object)
+	Type DBResult (Tag As Object, Columns As Map, Rows As List)
+End Sub
+
+Sub AppStart (Args() As String)
+	srvr.Initialize("")
+	DateTime.DateFormat = "dd/MM/yyyy"
+	DateTime.TimeFormat = "hh:mm:ss a"
+	config = LoadServerConfig
+	srvr.Port = config.Get("ServerPort")
+	If IsNumber(config.Get("SSLPort")) Then SslPort = config.Get("SSLPort")
+	If SslPort > 0 Then ConfigureSSL
+	rdcConnector1.Initialize
+	srvr.SetStaticFilesOptions(CreateMap("dirAllowed": False))
+	srvr.AddHandler("", "HomeHandler", False)
+	srvr.AddHandler("/rdc", "RDCHandler", False)
+	srvr.Start
+	Log($"jRDC2 is running (template version = ${NumberFormat2(VERSION, 1, 2, 2, False)})"$)
+	#If DEBUG
+	OpenBrowser($"http://localhost:${srvr.Port}"$)
+	#Else
+	If Args.Length > 0 And Args(0).EqualsIgnoreCase("dev") Then
+		OpenBrowser($"http://localhost:${srvr.Port}"$)
+	End If
+	#End If	
+	StartMessageLoop
+End Sub
+
+Private Sub ConfigureSSL
+	Dim ssl As SslConfiguration
+	ssl.Initialize
+	ssl.SetKeyStorePath(KeyStoreDir, KeyStoreFile)
+	ssl.KeyStorePassword = KeyStorePassword
+	'ssl.KeyManagerPassword = ""
+	srvr.SetSslConfiguration(ssl, SslPort)
+	'add filter to redirect all traffic from http to https (optional)
+	srvr.AddFilter("/*", "HttpsFilter", False)
+End Sub
+
+Public Sub LoadServerConfig As Map
+	Dim ConfigMap As Map
+	Dim TempMap As Map = File.ReadMap(File.DirAssets, "config.properties")
+	If TempMap.IsInitialized Then
+		ConfigMap.Initialize
+		For Each Key As String In TempMap.Keys
+			Select Key
+				Case "ServerPort", _
+					"SSLPort", _
+					"SSL_KEYSTORE_DIR", _
+					"SSL_KEYSTORE_FILE", _
+					"SSL_KEYSTORE_PASSWORD"
+					ConfigMap.Put(Key, TempMap.Get(Key))
+			End Select
+		Next
+	End If
+	Return ConfigMap
+End Sub
+
+Private Sub OpenBrowser (url As String)
+	Dim shl As Shell
+	shl.Initialize("shl", "cmd", Array As String("/c", "start", url))
+	'shl.Initialize("shl", "powershell", Array As String("-Command", "Start-Process", url))
+	'shl.WorkingDirectory = File.DirApp
+	shl.Run(10000) 'set a timeout of 10 seconds
+End Sub
+
+Sub shl_ProcessCompleted (Success As Boolean, ExitCode As Int, StdOut As String, StdErr As String)
+	If Success And ExitCode = 0 Then
+		Log(StdOut)
+	Else
+		Log("Error: " & StdErr)
+	End If
+End Sub
