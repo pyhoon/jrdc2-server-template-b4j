@@ -1,5 +1,6 @@
 # ignore files
-
+$APPNAME$.b4j
+$APPNAME$.b4j.meta
 
 # ignore ALL files in these directories
 AutoBackups/
@@ -7,5 +8,3 @@ AutoBackups/
 # Include www directory
 Objects/
 !Objects/www/*
-!$APPNAME$.b4j
-!$APPNAME$.b4j.meta
