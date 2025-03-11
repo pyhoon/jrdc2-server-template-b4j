@@ -1,0 +1,128 @@
+﻿AppType=StandardJava
+Build1=DBF,b4j.jrdc2.server,DBF
+Build2=Default,b4j.jrdc2.server,SQLite
+Build3=Firebird,b4j.jrdc2.server,Firebird
+Build4=MSSQL,b4j.jrdc2.server,MSSQL
+Build5=MySQL,b4j.jrdc2.server,MySQL
+Build6=Postgresql,b4j.jrdc2.server,Postgresql
+File1=config.properties
+FileGroup1=Default Group
+Group=Default Group
+Library1=javaobject
+Library2=jcore
+Library3=jrandomaccessfile
+Library4=jserver
+Library5=jshell
+Library6=jsql
+Module1=HomeHandler
+Module2=RDCConnector
+Module3=RDCHandler
+NumberOfFiles=1
+NumberOfLibraries=6
+NumberOfModules=3
+Version=10
+@EndOfDesignText@
+' Name: 			jRDC2 Server Template
+' Version: 			3.00 (based on jRDC2 version 2.23)
+' Author:			Aeric Poon
+' Description: 		Non-UI application (console / server application)
+' Files folder: 	file:///C:/B4X/Development/jrdc2-server-template-b4j/JRDC%20Server%20%283.00%29/Files
+' Config file: 		ide://run?file=%WINDIR%\SysWOW64\explorer.exe&Args=%PROJECT%\Files\config.properties
+
+#Region  Project Attributes
+	#CommandLineArgs: dev
+	#MergeLibraries: True
+#End Region
+
+' Choose build configuration
+#If MSSQL
+#AdditionalJar: jtds-1.3.1
+#Else If MySQL
+#AdditionalJar: mysql-connector-java-8.0.30
+#Else If Firebird
+#AdditionalJar: jaybird-5.0.0.java11
+#Else If Postgresql
+#AdditionalJar: postgresql-42.6.0
+#Else If DBF
+#AdditionalJar: javadbf-1.13.2
+#AdditionalJar: dbschema-dbf-jdbc1.0
+#AdditionalJar: h2-1.4.200
+#Else
+'#AdditionalJar: sqlite-jdbc-3.7.2
+' multi row insert is not supported until v3.7.11
+' https://stackoverflow.com/questions/1609637/how-to-insert-multiple-rows-in-sqlite
+' shrink SQLite JDBC library (credit to tchart)
+' https://www.b4x.com/android/forum/threads/shrinking-that-sqlite-jdbc-library.120883/
+#AdditionalJar: sqlite-jdbc-min-3.49.1.0
+#End If
+
+Sub Process_Globals
+	Public Const VERSION As Double = 3.0
+	Public rdcConnector1 As RDCConnector
+	Public srvr As Server
+	Private SslPort As Int
+	Private dev As Boolean
+	Type DBCommand (Name As String, Parameters() As Object)
+	Type DBResult (Tag As Object, Columns As Map, Rows As List)
+End Sub
+
+Sub AppStart (Args() As String)
+	srvr.Initialize("")
+	DateTime.DateFormat = "dd/MM/yyyy"
+	DateTime.TimeFormat = "hh:mm:ss a"
+	If Args.Length > 0 And Args(0).EqualsIgnoreCase("dev") Then
+		dev = True
+	End If
+	rdcConnector1.Initialize
+	rdcConnector1.CheckDatabase
+	StartMessageLoop
+End Sub
+
+Public Sub StartServer
+	Log("Starting server...")
+	Dim config As Map = File.ReadMap(File.DirAssets, "config.properties")
+	srvr.Port = config.Get("ServerPort")
+	If IsNumber(config.Get("SSLPort")) Then SslPort = config.Get("SSLPort")
+	If SslPort > 0 Then
+		ConfigureSSL(config.Get("SSL_KEYSTORE_DIR"), config.Get("SSL_KEYSTORE_FILE"), config.Get("SSL_KEYSTORE_PASSWORD"))
+	End If
+	srvr.SetStaticFilesOptions(CreateMap("dirAllowed": False))
+	srvr.AddHandler("", "HomeHandler", False)
+	srvr.AddHandler("/rdc", "RDCHandler", False)
+	srvr.Start
+	Log($"jRDC2 is running (template version = ${NumberFormat2(VERSION, 1, 2, 2, False)})"$)
+	#If DEBUG
+	OpenBrowser($"http://localhost:${srvr.Port}"$)
+	#Else
+	If dev Then
+	OpenBrowser($"http://localhost:${srvr.Port}"$)
+	End If
+	#End If
+End Sub
+
+Private Sub ConfigureSSL (KeyStoreDir As String, KeyStoreFile As String, KeyStorePassword As String)
+	Dim ssl As SslConfiguration
+	ssl.Initialize
+	ssl.SetKeyStorePath(KeyStoreDir, KeyStoreFile)
+	ssl.KeyStorePassword = KeyStorePassword
+	'ssl.KeyManagerPassword = ""
+	srvr.SetSslConfiguration(ssl, SslPort)
+	'add filter to redirect all traffic from http to https (optional)
+	srvr.AddFilter("/*", "HttpsFilter", False)
+End Sub
+
+Private Sub OpenBrowser (url As String)
+	Dim shl As Shell
+	shl.Initialize("shl", "cmd", Array As String("/c", "start", url))
+	'shl.Initialize("shl", "powershell", Array As String("-Command", "Start-Process", url))
+	'shl.WorkingDirectory = File.DirApp
+	shl.Run(10000) 'set a timeout of 10 seconds
+End Sub
+
+Sub shl_ProcessCompleted (Success As Boolean, ExitCode As Int, StdOut As String, StdErr As String)
+	If Success And ExitCode = 0 Then
+		Log(StdOut)
+	Else
+		Log("Error: " & StdErr)
+	End If
+End Sub
