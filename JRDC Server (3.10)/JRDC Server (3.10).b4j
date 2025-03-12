@@ -23,10 +23,10 @@ NumberOfModules=3
 Version=10
 @EndOfDesignText@
 ' Name: 			jRDC2 Server Template
-' Version: 			3.00 (based on jRDC2 version 2.23)
+' Version: 			3.10 (based on jRDC2 version 2.23)
 ' Author:			Aeric Poon
 ' Description: 		Non-UI application (console / server application)
-' Files folder: 	file:///C:/B4X/Development/jrdc2-server-template-b4j/JRDC%20Server%20%283.00%29/Files
+' Files folder: 	file:///C:/B4X/Development/jrdc2-server-template-b4j/JRDC%20Server%20%283.10%29/Files
 ' Config file: 		ide://run?file=%WINDIR%\SysWOW64\explorer.exe&Args=%PROJECT%\Files\config.properties
 
 #Region  Project Attributes
@@ -57,7 +57,7 @@ Version=10
 #End If
 
 Sub Process_Globals
-	Public Const VERSION As Double = 3.0
+	Public Const VERSION As Double = 3.1
 	Public rdcConnector1 As RDCConnector
 	Public srvr As Server
 	Private SslPort As Int

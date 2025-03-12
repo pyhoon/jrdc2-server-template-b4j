@@ -97,8 +97,8 @@ Private Sub ExecuteBatch (con As SQL, in As InputStream, resp As ServletResponse
 	Try
 		con.BeginTransaction
 		For Each cmd As DBCommand In commands
-			con.ExecNonQuery2(Main.rdcConnector1.GetCommand(cmd.Name), _
-				cmd.Parameters)
+			Log($"Command: query: ${cmd.Name}, Parameters=${cmd.Parameters.As(List)}"$)
+			con.ExecNonQuery2(Main.rdcConnector1.GetCommand(cmd.Name), cmd.Parameters)
 		Next
 		res.Rows.Add(Array As Object(0))
 		con.TransactionSuccessful

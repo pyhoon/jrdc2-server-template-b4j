@@ -15,7 +15,6 @@ Sub Class_Globals
 	Private User As String 'ignore
 	Private Password As String 'ignore
 	Private DB As SQL
-	Private batch As List
 	Private commands As Map
 	#If DBF
 	Private H2 As SQL
@@ -67,23 +66,6 @@ Public Sub GetConnection2 As SQL
 End Sub
 #End If
 
-Private Sub LoadQueries
-	Dim queries As Map = File.ReadMap(File.DirAssets, "config.properties")
-	If queries.IsInitialized Then
-		commands.Initialize
-		For Each Key As String In queries.Keys
-			If Key.StartsWith(DBType & ".SQL.") Or Key.StartsWith("SQL.") Then
-				commands.Put(Key, queries.Get(Key))
-			End If
-		Next
-'		#If DEBUG
-'		For Each Key As String In commands.Keys
-'			Log(commands.Get(Key))
-'		Next
-'		#End If
-	End If
-End Sub
-
 Public Sub CheckDatabase
 	Try
 		Dim DBFound As Boolean
@@ -103,6 +85,14 @@ Public Sub CheckDatabase
 		#End If
 
 		Dim config As Map = File.ReadMap(File.DirAssets, "config.properties")
+		' Put queries into map
+		commands.Initialize
+		For Each Key As String In config.Keys
+			If Key.StartsWith(DBType & ".SQL.") Or Key.StartsWith("SQL.") Then
+				commands.Put(Key, config.Get(Key))
+			End If
+		Next
+		
 		Select DBType
 			Case "SQLite", "DBF", "Firebird"
 				DBDir = config.Get(DBType & ".DBDir")
@@ -125,7 +115,6 @@ Public Sub CheckDatabase
 				#End If
 				DB.Initialize2(DriverClass, JdbcUrl.Replace("{DBName}", dbschema), User, Password)
 				If DB.IsInitialized Then
-					LoadQueries
 					Dim strSQL As String = GetCommand($"${DBType}.SQL.CHECK_DATABASE"$)
 					Dim res As ResultSet = DB.ExecQuery2(strSQL, Array As String(DBName))
 					Do While res.NextRow
@@ -140,13 +129,11 @@ Public Sub CheckDatabase
 				Log($"Unable to check ${DBType}"$)
 				Return
 		End Select
-		
+
 		If DBFound Then
 			Log("Database found!")
 		Else
 			Log("Creating database...")
-			LoadQueries
-			batch.Initialize
 			Select DBType.ToLowerCase
 				Case "sqlite"
 					DB.InitializeSQLite(DBDir, DBFile, True)
@@ -159,12 +146,6 @@ Public Sub CheckDatabase
 			ConAddSQLQuery(DB, $"SQL.INSERT_DUMMY_TBL_CATEGORY"$)
 			ConAddSQLQuery(DB, $"${DBType}.SQL.CREATE_TABLE_TBL_PRODUCTS"$)
 			ConAddSQLQuery(DB, $"SQL.INSERT_DUMMY_TBL_PRODUCTS"$)
-			
-'			#If DEBUG
-'			For Each qry As String In batch
-'				Log(qry)
-'			Next
-'			#End If
 			
 			Dim CreateDB As Object = DB.ExecNonQueryBatch("SQL")
 			Wait For (CreateDB) SQL_NonQueryComplete (Success As Boolean)
@@ -202,5 +183,4 @@ Private Sub ConAddSQLQuery (Comm As SQL, Key As String)
 	Log(strSQL)
 	'Comm.ExecNonQuery(strSQL) ' if not execute by batch (debug problematic query)
 	If strSQL <> "" Then Comm.AddNonQueryToBatch(strSQL, Null)
-	batch.Add(strSQL)
 End Sub
