@@ -1,8 +1,12 @@
 # ignore files
+*.db
 
 # ignore ALL files in these directories
 AutoBackups/
 
 # Include www directory
-Objects/
-!Objects/www/*
+Objects/b4xlibs
+Objects/bin
+Objects/logs
+Objects/shell
+Objects/src
