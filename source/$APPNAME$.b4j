@@ -32,7 +32,7 @@ Version=10.3
 #Region Macros
 	#Macro: Title, Config file, ide://run?file=%WINDIR%\SysWOW64\explorer.exe&Args=%PROJECT%\Files\config.properties
 	#Macro: Title, GetResources, ide://run?file=%JAVABIN%\java.exe&args=-jar&args=%ADDITIONAL%\..\B4X\resget.jar&args=%PROJECT%&args=true
-	#Macro: Title, Create Template, ide://run?file=%JAVABIN%\jar.exe&WorkingDirectory=..\&args=-cMf&args=%ADDITIONAL%\JRDC%20Server%20(3.20).b4xtemplate&args=resources.json&args=*.b4j*&args=*.bas&args=LICENSE&args=Files
+	#Macro: Title, Create Template, ide://run?file=%JAVABIN%\jar.exe&WorkingDirectory=..&args=-cMf&args=%ADDITIONAL%\JRDC%20Server%20(3.20).b4xtemplate&args=resources.json&args=*.b4j*&args=*.bas&args=LICENSE&args=Files
 #End Region
 ' Choose build configuration
 #If MSSQL
