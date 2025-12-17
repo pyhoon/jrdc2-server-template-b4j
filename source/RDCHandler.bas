@@ -91,7 +91,7 @@ Private Sub ExecuteBatch (con As SQL, in As InputStream, resp As ServletResponse
 	Dim commands As List = m.Get("commands")
 	Dim res As DBResult
 	res.Initialize
-	res.columns = CreateMap("AffectedRows (N/A)": 0)
+	res.Columns = CreateMap("AffectedRows (N/A)": 0)
 	res.Rows.Initialize
 	res.Tag = Null
 	Try
