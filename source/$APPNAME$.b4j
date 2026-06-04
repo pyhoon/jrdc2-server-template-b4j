@@ -20,21 +20,21 @@ Module3=RDCHandler
 NumberOfFiles=1
 NumberOfLibraries=6
 NumberOfModules=3
-Version=10.3
+Version=10.5
 @EndOfDesignText@
-' Name: 			jRDC2 Server Template
-' Version: 			3.30 (based on jRDC2 version 2.23)
-' Author:			Aeric Poon
 #Region  Project Attributes
-	#If Debug
-	#CommandLineArgs: dev
-	#End If
-	#MergeLibraries: True
+' Name:    jRDC2 Server Template (based on jRDC2 version 2.23)
+' Version: 3.30
+' Author:  Poon Yip Hoon (Aeric)
+#If Debug
+#CommandLineArgs: dev
+#End If
+#MergeLibraries: True
 #End Region
-#Region Macros
-	#Macro: Title, Edit Config, ide://run?file=%WINDIR%\SysWOW64\explorer.exe&Args=%PROJECT%\Files\config.properties
-	#Macro: Title, Get Resources, ide://run?file=%JAVABIN%\java.exe&args=-jar&args=%ADDITIONAL%\..\B4X\resget.jar&args=%PROJECT%&args=true
-	#Macro: Title, Create Template, ide://run?file=%JAVABIN%\jar.exe&WorkingDirectory=..&args=-cMf&args=%ADDITIONAL%\JRDC%20Server%20(3.30).b4xtemplate&args=resources.json&args=*.b4j*&args=*.bas&args=LICENSE&args=Files
+#Region  Macros
+#Macro: Title, Edit Config, ide://run?file=%WINDIR%\SysWOW64\explorer.exe&Args=%PROJECT%\Files\config.properties
+#Macro: Title, Get Resources, ide://run?file=%JAVABIN%\java.exe&args=-jar&args=%ADDITIONAL%\..\B4X\resget.jar&args=%PROJECT%&args=true
+#Macro: Title, Create Template, ide://run?file=%JAVABIN%\jar.exe&WorkingDirectory=..&args=-cMf&args=%ADDITIONAL%\JRDC%20Server%20(3.30).b4xtemplate&args=resources.json&args=*.b4j*&args=*.bas&args=LICENSE&args=Files
 #End Region
 ' Choose build configuration
 #If MSSQL
@@ -52,12 +52,12 @@ Version=10.3
 #AdditionalJar: dbschema-dbf-jdbc1.0
 #AdditionalJar: h2-1.4.200
 #Else
-'#AdditionalJar: sqlite-jdbc-3.7.2
 ' multi row insert is not supported until v3.7.11
 ' https://stackoverflow.com/questions/1609637/how-to-insert-multiple-rows-in-sqlite
 ' shrink SQLite JDBC library (credit to tchart)
 ' https://www.b4x.com/android/forum/threads/shrinking-that-sqlite-jdbc-library.120883/
 #AdditionalJar: sqlite-jdbc-min-3.49.1.0
+'#AdditionalJar: sqlite-jdbc-3.7.2
 #End If
 
 Sub Process_Globals
